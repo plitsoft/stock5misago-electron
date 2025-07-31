@@ -4,36 +4,34 @@ const path = require('path');
 let mainWindow: any = null;
 
 function createWindow(): void {
-  // 메인 윈도우 생성
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 900,
     minWidth: 1280,
     minHeight: 700,
-    titleBarStyle: 'hidden', // 타이틀바 숨기기
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js') // 컴파일된 preload 파일
+      preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, 'icon.png'), // 아이콘 (선택사항)
-    show: false // 준비될 때까지 숨김
+    icon: path.join(__dirname, 'icon.png'),
+    show: false 
   });
 
-  // 윈도우가 준비되면 표시
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
 
   mainWindow.loadURL('http://localhost:3000');
 
-  // 외부 링크는 기본 브라우저에서 열기
   mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // macOS에서 메뉴바 설정
   if (process.platform === 'darwin') {
     const template: any[] = [
       {
@@ -86,17 +84,12 @@ function createWindow(): void {
     
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-  } else {
-    // Windows/Linux에서는 기본 메뉴 제거 (선택사항)
-    // Menu.setApplicationMenu(null);
   }
 }
 
-// 앱이 준비되면 윈도우 생성
 app.whenReady().then(() => {
   createWindow();
 
-  // macOS에서 dock 아이콘 클릭 시 윈도우 생성
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -104,26 +97,23 @@ app.whenReady().then(() => {
   });
 });
 
-// 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-// 보안 설정: 권한이 없는 내비게이션 차단
 app.on('web-contents-created', (_event: any, contents: any) => {
   contents.on('will-navigate', (navigationEvent: any, navigationUrl: string) => {
     const parsedUrl: URL = new URL(navigationUrl);
     
-    // localhost가 아닌 외부 사이트로의 내비게이션 차단
     if (parsedUrl.origin !== 'http://localhost:3000') {
       navigationEvent.preventDefault();
     }
   });
 });
 
-// IPC 핸들러: 창 드래그를 위한 마우스 이벤트 처리
+
 interface MousePosition {
   mouseX: number;
   mouseY: number;
@@ -148,7 +138,7 @@ ipcMain.on('window-mouse-move', (_event: any, { mouseX, mouseY }: MousePosition)
   mainWindow.setPosition(newX, newY);
 });
 
-// 더블클릭 시 창 최대화/복원 토글
+
 ipcMain.on('window-toggle-maximize', () => {
   if (mainWindow) {
     if (mainWindow.isMaximized()) {
