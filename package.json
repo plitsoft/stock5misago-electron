@@ -5,11 +5,11 @@
   "type": "commonjs",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsc && NODE_ENV=development electron dist/main.js",
+    "dev": "tsc && APP_URL=https://app.stock.5minsago.com electron dist/main.js",
     "build": "tsc",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npm run build && electron-forge make"
+    "make": "npm run build && APP_URL=https://app.stock.5minsago.com electron-forge make"
   },
   "author": "Plitsoft",
   "dependencies": {

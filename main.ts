@@ -25,7 +25,7 @@ function createWindow(): void {
     mainWindow.show();
   });
 
-  mainWindow.loadURL('http://localhost:3000');
+  mainWindow.loadURL('https://app.stock.5minsago.com');
 
   mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
     shell.openExternal(url);
@@ -107,7 +107,7 @@ app.on('web-contents-created', (_event: any, contents: any) => {
   contents.on('will-navigate', (navigationEvent: any, navigationUrl: string) => {
     const parsedUrl: URL = new URL(navigationUrl);
     
-    if (parsedUrl.origin !== 'http://localhost:3000') {
+    if (parsedUrl.origin !== 'https://app.stock.5minsago.com') {
       navigationEvent.preventDefault();
     }
   });
