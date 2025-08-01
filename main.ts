@@ -1,8 +1,10 @@
 import { app, BrowserWindow, Menu, shell, ipcMain } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
+// @ts-ignore
+import squirrelStartup from "electron-squirrel-startup";
 
-if (require('electron-squirrel-startup')) {
+if (squirrelStartup) {
   app.quit();
 }
 
