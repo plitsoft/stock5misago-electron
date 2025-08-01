@@ -2,6 +2,10 @@ import { app, BrowserWindow, Menu, shell, ipcMain } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
+
 let mainWindow: any = null;
 
 const __filename = fileURLToPath(import.meta.url);
