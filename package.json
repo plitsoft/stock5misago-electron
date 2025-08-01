@@ -10,7 +10,7 @@
     "build": "tsc",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npm run build && ELECTRON_DISABLE_SECURITY_WARNINGS=true electron-forge make",
+    "make": "electron-forge make",
     "publish": "npm run build && electron-forge publish"
   },
   "author": "Plitsoft",

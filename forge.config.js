@@ -2,41 +2,6 @@ const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
-  packagerConfig: {
-    asar: true,
-    icon: "./icons/icon"
-  },
-  rebuildConfig: {},
-  makers: [
-    {
-      name: '@electron-forge/maker-squirrel',
-      platforms: ['win32'],
-      config: {
-        name: "StockApp5MinAgo"
-      },
-    },
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-    },
-    {
-      name: '@electron-forge/maker-dmg',
-      platforms: ['darwin'],
-      config: {
-        format: 'UDZO'
-      }
-    },
-    {
-      name: '@electron-forge/maker-deb',
-      platforms: ['linux'],
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-rpm',
-      platforms: ['linux'],
-      config: {},
-    },
-  ],
   publishers: [
     {
       name: '@electron-forge/publisher-github',
@@ -45,10 +10,31 @@ module.exports = {
           owner: 'plitsoft',
           name: 'stock5misago-electron'
         },
-        prerelease: false,
-        draft: true
+        prerelease: true
       }
     }
+  ],
+  packagerConfig: {
+    asar: true,
+  },
+  rebuildConfig: {},
+  makers: [
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: {},
+    },
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['darwin'],
+    },
+    {
+      name: '@electron-forge/maker-deb',
+      config: {},
+    },
+    {
+      name: '@electron-forge/maker-rpm',
+      config: {},
+    },
   ],
   plugins: [
     {
