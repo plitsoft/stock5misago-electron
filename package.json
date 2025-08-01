@@ -2,14 +2,14 @@
   "name": "stockapp-electron",
   "version": "1.0.0",
   "description": "출고오분전 Electron Desktop App",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsc && APP_URL=https://app.stock.5minsago.com electron dist/main.js",
+    "dev": "tsc && ELECTRON_DISABLE_SECURITY_WARNINGS=true electron dist/main.js",
     "build": "tsc",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npm run build && APP_URL=https://app.stock.5minsago.com electron-forge make"
+    "make": "npm run build && ELECTRON_DISABLE_SECURITY_WARNINGS=true electron-forge make"
   },
   "author": "Plitsoft",
   "dependencies": {
@@ -24,7 +24,6 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.8.2",
     "@electron-forge/plugin-fuses": "^7.8.2",
     "@electron/fuses": "^1.8.0",
-    "@types/node": "^20.12.8",
     "electron": "37.2.4",
     "tsx": "^4.7.1",
     "typescript": "^5.4.5"
