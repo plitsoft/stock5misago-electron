@@ -15,6 +15,14 @@ export default {
     }
   ],
   packagerConfig: {
+    osxSign: {
+      identity: process.env.DEVELOPER_ID_APPLICATION
+    },
+    osxNotarize: {
+      appleId: process.env.APPLE_ID,
+      appleIdPassword: process.env.APPLE_PASSWORD,
+      teamId: process.env.APPLE_TEAM_ID
+    },
     asar: true,
     icon: "./icons/icon"
   },

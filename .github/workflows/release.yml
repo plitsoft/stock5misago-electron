@@ -30,7 +30,36 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # macOS에서만 Apple 인증서 설정
+      - name: Setup Apple Certificate (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # 임시 키체인 생성
+          security create-keychain -p temp_password temp.keychain
+          security default-keychain -s temp.keychain
+          security unlock-keychain -p temp_password temp.keychain
+          security set-keychain-settings -t 3600 -u temp.keychain
+          
+          # 인증서 디코딩 및 설치
+          echo "${{ secrets.APPLE_CERT_P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k temp.keychain -P "${{ secrets.APPLE_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k temp_password temp.keychain
+          
+          # 임시 파일 정리
+          rm certificate.p12
+
       - name: Build and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS 서명 및 공증을 위한 환경변수
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run publish
+
+      # macOS에서만 키체인 정리
+      - name: Cleanup Keychain (macOS)
+        if: matrix.os == 'macos-latest' && always()
+        run: |
+          security delete-keychain temp.keychain || true
