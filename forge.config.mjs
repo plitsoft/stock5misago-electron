@@ -16,6 +16,7 @@ export default {
   ],
   packagerConfig: {
     osxSign: {
+      appBundleId: "com.plitsoft.stock5misago",
       identity: process.env.DEVELOPER_ID_APPLICATION
     },
     osxNotarize: {
