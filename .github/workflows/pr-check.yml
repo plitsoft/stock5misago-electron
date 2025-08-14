@@ -1,0 +1,82 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Check version label
+        run: |
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
+          echo "PR Labels: $LABELS"
+          
+          # 허용된 라벨 체크
+          RELEASE_LABELS=0
+          LABEL_TYPE=""
+          
+          if [[ "$LABELS" == *"major"* ]]; then
+            LABEL_TYPE="major"
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
+          fi
+          
+          if [[ "$LABELS" == *"minor"* ]]; then
+            if [[ -z "$LABEL_TYPE" ]]; then
+              LABEL_TYPE="minor"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
+          fi
+          
+          if [[ "$LABELS" == *"patch"* ]]; then
+            if [[ -z "$LABEL_TYPE" ]]; then
+              LABEL_TYPE="patch"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
+          fi
+          
+          if [[ "$LABELS" == *"skip-release"* ]]; then
+            if [[ -z "$LABEL_TYPE" ]]; then
+              LABEL_TYPE="skip-release"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
+          fi
+          
+          # 중복 라벨 체크
+          if [[ $RELEASE_LABELS -gt 1 ]]; then
+            echo "❌ Multiple release labels found. Please use only ONE of:"
+            echo "   - major: Breaking changes (1.0.0 → 2.0.0)"
+            echo "   - minor: New features (1.0.0 → 1.1.0)"
+            echo "   - patch: Bug fixes (1.0.0 → 1.0.1)"
+            echo "   - skip-release: No version update needed (CI, docs, tests, etc.)"
+            exit 1
+          fi
+          
+          # 필수 라벨 체크
+          if [[ $RELEASE_LABELS -eq 0 ]]; then
+            echo "❌ PR must have one of the following labels:"
+            echo "   - major: Breaking changes (1.0.0 → 2.0.0)"
+            echo "   - minor: New features (1.0.0 → 1.1.0)"
+            echo "   - patch: Bug fixes (1.0.0 → 1.0.1)"
+            echo "   - skip-release: No version update needed (CI, docs, tests, etc.)"
+            exit 1
+          fi
+          
+          echo "✅ Release label confirmed: $LABEL_TYPE"
