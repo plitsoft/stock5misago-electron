@@ -1,0 +1,204 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  auto-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Find merged PR
+        id: find_pr
+        run: |
+          # 가장 최근 커밋의 메시지에서 PR 번호 추출
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+          echo "Latest commit: $COMMIT_MESSAGE"
+          
+          # "Merge pull request #123" 형태에서 PR 번호 추출
+          if [[ "$COMMIT_MESSAGE" =~ Merge\ pull\ request\ \#([0-9]+) ]]; then
+            PR_NUMBER=${BASH_REMATCH[1]}
+            echo "Found PR #$PR_NUMBER"
+          else
+            # "Feature xyz (#123)" 형태에서도 시도
+            if [[ "$COMMIT_MESSAGE" =~ \(\#([0-9]+)\) ]]; then
+              PR_NUMBER=${BASH_REMATCH[1]}
+              echo "Found PR #$PR_NUMBER from commit title"
+            else
+              echo "❌ No PR number found in commit message"
+              echo "pr_found=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_found=true" >> $GITHUB_OUTPUT
+
+      - name: Get PR labels
+        if: steps.find_pr.outputs.pr_found == 'true'
+        id: get_labels
+        run: |
+          PR_NUMBER=${{ steps.find_pr.outputs.pr_number }}
+          echo "Getting labels for PR #$PR_NUMBER"
+          
+          # GitHub API로 PR 정보 가져오기 (HTTP 상태 코드 포함)
+          HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+          
+          # HTTP 상태 코드 분리
+          HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n1)
+          RESPONSE=$(echo "$HTTP_RESPONSE" | head -n -1)
+          
+          if [[ "$HTTP_STATUS" -ne 200 ]]; then
+            echo "❌ GitHub API call failed with status: $HTTP_STATUS"
+            echo "Response: $RESPONSE"
+            echo "labels=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # API 응답 유효성 체크
+          if ! echo "$RESPONSE" | jq -e . >/dev/null 2>&1; then
+            echo "❌ Invalid JSON response from GitHub API"
+            echo "labels=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 라벨 추출
+          if ! LABELS=$(echo "$RESPONSE" | jq -r '.labels[].name' 2>/dev/null | tr '\n' ' '); then
+            echo "❌ Failed to extract labels from PR response"
+            echo "labels=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "PR Labels: $LABELS"
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Install Node.js
+        if: steps.find_pr.outputs.pr_found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.find_pr.outputs.pr_found == 'true'
+        run: npm ci
+
+      - name: Determine version bump type
+        if: steps.find_pr.outputs.pr_found == 'true'
+        id: bump_version
+        run: |
+          LABELS="${{ steps.get_labels.outputs.labels }}"
+          PR_NUMBER="${{ steps.find_pr.outputs.pr_number }}"
+          echo "PR Labels: '$LABELS'"
+          
+          # 라벨이 비어있는지 체크
+          if [[ -z "$LABELS" || "$LABELS" == " " ]]; then
+            echo "❌ No labels found for PR #$PR_NUMBER"
+            echo "   Please add one of: major, minor, patch, skip-release"
+            exit 0
+          fi
+          
+          # 릴리즈 라벨 개수 체크
+          RELEASE_LABELS=0
+          BUMP_TYPE=""
+          
+          if [[ "$LABELS" == *"major"* ]]; then
+            BUMP_TYPE="major"
+            ((RELEASE_LABELS++))
+          fi
+          
+          if [[ "$LABELS" == *"minor"* ]]; then
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="minor"
+            fi
+            ((RELEASE_LABELS++))
+          fi
+          
+          if [[ "$LABELS" == *"patch"* ]]; then
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="patch"
+            fi
+            ((RELEASE_LABELS++))
+          fi
+          
+          if [[ "$LABELS" == *"skip-release"* ]]; then
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="skip-release"
+            fi
+            ((RELEASE_LABELS++))
+          fi
+          
+          # 중복 라벨 체크
+          if [[ $RELEASE_LABELS -gt 1 ]]; then
+            echo "❌ Multiple release labels found in PR #$PR_NUMBER: $LABELS"
+            echo "   Please use only ONE of: major, minor, patch, skip-release"
+            exit 0
+          fi
+          
+          # 릴리즈 라벨이 없는 경우
+          if [[ $RELEASE_LABELS -eq 0 ]]; then
+            echo "❌ No release label found in PR #$PR_NUMBER"
+            echo "   Available labels: $LABELS"
+            echo "   Please add one of: major, minor, patch, skip-release"
+            exit 0
+          fi
+          
+          # skip-release 라벨인 경우
+          if [[ "$BUMP_TYPE" == "skip-release" ]]; then
+            echo "🔄 Skip-release label found for PR #$PR_NUMBER"
+            echo "⏭️  Skipping version bump as requested"
+            echo "✅ PR processed successfully without version update"
+            exit 0
+          fi
+          
+          echo "🔄 Bumping $BUMP_TYPE version for PR #$PR_NUMBER..."
+          
+          # 현재 버전 가져오기
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # npm version으로 버전 업데이트
+          npm version $BUMP_TYPE --no-git-tag-version
+          
+          # 새 버전 가져오기
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "New version: $NEW_VERSION"
+          
+          # Git에 커밋
+          git add package.json package-lock.json
+          git commit -m "$(cat <<EOF
+          chore: bump version to $NEW_VERSION
+          
+          Triggered by PR #$PR_NUMBER with '$BUMP_TYPE' label
+          
+          EOF
+          )"
+          
+          # 태그 생성
+          NEW_TAG="v$NEW_VERSION"
+          git tag $NEW_TAG
+          
+          # 푸시
+          git push origin main
+          git push origin $NEW_TAG
+          
+          echo "✅ Version bumped to $NEW_VERSION and tagged as $NEW_TAG"
+          echo "🚀 Release workflow will be triggered automatically by the new tag."
+
