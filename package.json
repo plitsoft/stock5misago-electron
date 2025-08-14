@@ -32,5 +32,8 @@
   },
   "config": {
     "forge": "./forge.config.mjs"
+  },
+  "build": {
+    "appId": "com.plitsoft.stock5misago"
   }
 }
