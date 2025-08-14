@@ -121,22 +121,28 @@ jobs:
           
           if [[ "$LABELS" == *"major"* ]]; then
             BUMP_TYPE="major"
-            ((RELEASE_LABELS++))
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
           fi
           
           if [[ "$LABELS" == *"minor"* ]]; then
-            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="minor"
-            ((RELEASE_LABELS++))
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="minor"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
           fi
           
           if [[ "$LABELS" == *"patch"* ]]; then
-            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="patch"
-            ((RELEASE_LABELS++))
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="patch"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
           fi
           
           if [[ "$LABELS" == *"skip-release"* ]]; then
-            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="skip-release"
-            ((RELEASE_LABELS++))
+            if [[ -z "$BUMP_TYPE" ]]; then
+              BUMP_TYPE="skip-release"
+            fi
+            RELEASE_LABELS=$((RELEASE_LABELS + 1))
           fi
           
           # 중복 라벨 체크
