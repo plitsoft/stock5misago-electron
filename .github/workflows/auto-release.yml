@@ -125,23 +125,17 @@ jobs:
           fi
           
           if [[ "$LABELS" == *"minor"* ]]; then
-            if [[ -z "$BUMP_TYPE" ]]; then
-              BUMP_TYPE="minor"
-            fi
+            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="minor"
             ((RELEASE_LABELS++))
           fi
           
           if [[ "$LABELS" == *"patch"* ]]; then
-            if [[ -z "$BUMP_TYPE" ]]; then
-              BUMP_TYPE="patch"
-            fi
+            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="patch"
             ((RELEASE_LABELS++))
           fi
           
           if [[ "$LABELS" == *"skip-release"* ]]; then
-            if [[ -z "$BUMP_TYPE" ]]; then
-              BUMP_TYPE="skip-release"
-            fi
+            [[ -z "$BUMP_TYPE" ]] && BUMP_TYPE="skip-release"
             ((RELEASE_LABELS++))
           fi
           
