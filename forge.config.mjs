@@ -15,10 +15,12 @@ export default {
     }
   ],
   packagerConfig: {
+    appBundleId: "com.plitsoft.stock5minsago",
     osxSign: {
       identity: process.env.DEVELOPER_ID_APPLICATION
     },
     osxNotarize: {
+      tool: "notarytool",
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
