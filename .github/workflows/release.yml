@@ -5,9 +5,21 @@ on:
   push:
     tags:
       - "v*"
+  workflow_run:
+    workflows: ["Auto Release"]
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
   release:
+    # workflow_run으로 트리거된 경우에만 실행
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    
     permissions:
       contents: write
 

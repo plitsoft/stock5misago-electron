@@ -196,9 +196,24 @@ jobs:
           git tag $NEW_TAG
           
           # 푸시
-          git push origin main
-          git push origin $NEW_TAG
+          echo "🔄 Pushing version bump commit to main..."
+          if git push origin main; then
+            echo "✅ Version bump commit pushed successfully"
+          else
+            echo "❌ Failed to push version bump commit to main"
+            echo "This might be due to branch protection rules"
+            exit 1
+          fi
+          
+          echo "🔄 Pushing tag $NEW_TAG..."
+          if git push origin $NEW_TAG; then
+            echo "✅ Tag $NEW_TAG pushed successfully"
+            echo "🚀 Release workflow should be triggered automatically"
+          else
+            echo "❌ Failed to push tag $NEW_TAG"
+            echo "Manual release may be required"
+            exit 1
+          fi
           
           echo "✅ Version bumped to $NEW_VERSION and tagged as $NEW_TAG"
-          echo "🚀 Release workflow will be triggered automatically by the new tag."
 
