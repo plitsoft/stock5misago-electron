@@ -44,7 +44,7 @@ function createWindow(): void {
     mainWindow.show();
   });
 
-  mainWindow.loadURL("http://localhost:3000");
+  mainWindow.loadURL("http://192.168.0.150:3000");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
     shell.openExternal(url);
