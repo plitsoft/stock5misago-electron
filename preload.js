@@ -15,12 +15,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
 
   window: {
-    onMouseDown: (mouseX, mouseY) => {
-      ipcRenderer.send("window-mouse-down", { mouseX, mouseY });
-    },
-    onMouseMove: (mouseX, mouseY) => {
-      ipcRenderer.send("window-mouse-move", { mouseX, mouseY });
-    },
+    // macOS에서만 커스텀 드래그 API 제공 (Windows는 titleBarOverlay 사용)
+    ...(process.platform === "darwin" && {
+      onMouseDown: (mouseX, mouseY) => {
+        ipcRenderer.send("window-mouse-down", { mouseX, mouseY });
+      },
+      onMouseMove: (mouseX, mouseY) => {
+        ipcRenderer.send("window-mouse-move", { mouseX, mouseY });
+      },
+    }),
     toggleMaximize: () => {
       ipcRenderer.send("window-toggle-maximize");
     },

@@ -131,26 +131,29 @@ interface MousePosition {
 let mouseDiffX: number = 0;
 let mouseDiffY: number = 0;
 
-ipcMain.on(
-  "window-mouse-down",
-  (_event: any, { mouseX, mouseY }: MousePosition) => {
-    if (!mainWindow) return;
-    const [windowX, windowY] = mainWindow.getPosition();
-    mouseDiffX = mouseX - windowX;
-    mouseDiffY = mouseY - windowY;
-  }
-);
+// macOS에서만 커스텀 드래그 핸들러 등록 (Windows는 titleBarOverlay 사용)
+if (process.platform === "darwin") {
+  ipcMain.on(
+    "window-mouse-down",
+    (_event: any, { mouseX, mouseY }: MousePosition) => {
+      if (!mainWindow) return;
+      const [windowX, windowY] = mainWindow.getPosition();
+      mouseDiffX = mouseX - windowX;
+      mouseDiffY = mouseY - mouseY;
+    }
+  );
 
-ipcMain.on(
-  "window-mouse-move",
-  (_event: any, { mouseX, mouseY }: MousePosition) => {
-    if (!mainWindow) return;
+  ipcMain.on(
+    "window-mouse-move",
+    (_event: any, { mouseX, mouseY }: MousePosition) => {
+      if (!mainWindow) return;
 
-    const newX = mouseX - mouseDiffX;
-    const newY = mouseY - mouseDiffY;
-    mainWindow.setPosition(newX, newY);
-  }
-);
+      const newX = mouseX - mouseDiffX;
+      const newY = mouseY - mouseDiffY;
+      mainWindow.setPosition(newX, newY);
+    }
+  );
+}
 
 ipcMain.on("window-toggle-maximize", () => {
   if (mainWindow) {
