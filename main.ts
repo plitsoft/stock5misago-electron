@@ -25,13 +25,10 @@ function createWindow(): void {
           titleBarStyle: "hidden",
         }
       : {
-          // Windows/Linux: 2024 베스트 프랙티스
+          // Windows/Linux: CSS 드래그 기반 (IPC 드래그 제거)
+          frame: false,
           titleBarStyle: "hidden",
-          titleBarOverlay: {
-            color: '#ffffff',
-            symbolColor: '#000000',
-            height: 32
-          }
+          titleBarOverlay: true
         }
     ),
     webPreferences: {
@@ -47,7 +44,7 @@ function createWindow(): void {
     mainWindow.show();
   });
 
-  mainWindow.loadURL("https://app.stock.5minsago.com");
+  mainWindow.loadURL("http://192.168.0.150:3000");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
     shell.openExternal(url);
@@ -144,7 +141,7 @@ interface MousePosition {
 let mouseDiffX: number = 0;
 let mouseDiffY: number = 0;
 
-// macOS에서만 커스텀 드래그 핸들러 등록 (Windows는 titleBarOverlay 사용)
+// macOS에서만 커스텀 드래그 핸들러 등록 (Windows는 CSS 드래그 사용)
 if (process.platform === "darwin") {
   ipcMain.on(
     "window-mouse-down",
