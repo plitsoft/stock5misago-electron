@@ -44,7 +44,7 @@ function createWindow(): void {
     mainWindow.show();
   });
 
-  mainWindow.loadURL("https://app.stock.5minsago.com");
+  mainWindow.loadURL("http://localhost:3000");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
     shell.openExternal(url);
