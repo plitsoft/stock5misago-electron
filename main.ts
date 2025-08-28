@@ -19,7 +19,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 1280,
     minHeight: 700,
-    titleBarStyle: "hidden",
+    titleBarStyle: process.platform === 'darwin' ? "hidden" : "hiddenInset",
     titleBarOverlay: (process.platform !== 'darwin' ? true : false),
     webPreferences: {
       nodeIntegration: false,
