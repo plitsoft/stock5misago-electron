@@ -25,8 +25,8 @@ function createWindow(): void {
           titleBarStyle: "hidden",
         }
       : {
-          // Windows/Linux: 완전한 프레임리스
-          frame: false,
+          // Windows/Linux: 2024 베스트 프랙티스
+          titleBarStyle: "hidden",
           titleBarOverlay: {
             color: '#ffffff',
             symbolColor: '#000000',
