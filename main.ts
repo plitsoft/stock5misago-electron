@@ -19,8 +19,21 @@ function createWindow(): void {
     height: 900,
     minWidth: 1280,
     minHeight: 700,
-    titleBarStyle: process.platform === 'darwin' ? "hidden" : "hiddenInset",
-    titleBarOverlay: (process.platform !== 'darwin' ? true : false),
+    ...(process.platform === 'darwin' 
+      ? {
+          // macOS: 기존 설정 유지
+          titleBarStyle: "hidden",
+        }
+      : {
+          // Windows/Linux: 완전한 프레임리스
+          frame: false,
+          titleBarOverlay: {
+            color: '#ffffff',
+            symbolColor: '#000000',
+            height: 32
+          }
+        }
+    ),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
